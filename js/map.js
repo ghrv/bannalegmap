@@ -22,17 +22,6 @@ function initMap() {
     // Chargement des points d'intérêt
     loadPOIs();
     
-    // Ajout d'un marqueur pour le centre de la carte (débogage)
-    new google.maps.Marker({
-        position: CONFIG.center,
-        map: map,
-        title: "Centre de Bannalec",
-        icon: {
-            url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png",
-            scaledSize: new google.maps.Size(32, 32)
-        }
-    });
-    
     // Gestion du bouton plein écran
     document.getElementById('fullscreen-btn').addEventListener('click', toggleFullScreen);
 }
@@ -41,44 +30,6 @@ function initMap() {
 function loadPOIs() {
     console.log("Chargement des points d'intérêt depuis:", CONFIG.dataUrl);
     
-    // Utilisation de données en ligne dure pour tester (débogage)
-    const hardcodedData = {
-        "type": "FeatureCollection",
-        "features": [
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [-3.7001, 47.9333]
-                },
-                "properties": {
-                    "name": "Église Saint-Cado",
-                    "type": "eglise",
-                    "description": "Église paroissiale datant du 16ème siècle.",
-                    "period": "16ème siècle"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [-3.6958, 47.9387]
-                },
-                "properties": {
-                    "name": "Menhir de Kerlouriec",
-                    "type": "menhir",
-                    "description": "Menhir datant du Néolithique.",
-                    "period": "Néolithique"
-                }
-            }
-        ]
-    };
-    
-    // Tester avec les données en ligne dure d'abord
-    console.log("Création des marqueurs avec données hardcodées");
-    hardcodedData.features.forEach(createMarker);
-    
-    // Puis essayer avec le fichier JSON
     fetch(CONFIG.dataUrl)
         .then(response => {
             if (!response.ok) {
@@ -118,15 +69,15 @@ function createMarker(feature) {
     const type = feature.properties.type || 'autre';
     console.log("Type de POI:", type);
     
-    // Utilisation d'une icône par défaut si le type n'est pas défini
-    let icon = "https://maps.google.com/mapfiles/ms/icons/blue-dot.png";
-    
-    // Essayer d'utiliser l'icône configurée si disponible
-    if (CONFIG.poiTypes[type] && CONFIG.poiTypes[type].icon) {
-        icon = CONFIG.poiTypes[type].icon;
-    } else {
-        console.warn(`Type "${type}" non défini dans CONFIG.poiTypes, utilisation de l'icône par défaut`);
+    // Vérifier si le type existe dans la configuration
+    if (!CONFIG.poiTypes[type]) {
+        console.warn(`Type "${type}" non défini dans CONFIG.poiTypes, utilisation du type "autre"`);
     }
+    
+    const poiConfig = CONFIG.poiTypes[type] || CONFIG.poiTypes['autre'];
+    
+    // Utiliser une icône de secours si l'icône configurée n'est pas trouvée
+    const icon = poiConfig.icon || 'data/images/landmark.png';
     
     // Position du marqueur
     const position = {
@@ -147,7 +98,7 @@ function createMarker(feature) {
         }
     });
     
-    // Ajout d'un listener pour l'événement click
+    // Gérer l'erreur de chargement d'icône
     marker.addListener('click', () => {
         // Construction du contenu de l'infoWindow
         const content = buildInfoWindowContent(feature);
