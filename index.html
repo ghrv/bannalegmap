@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carte interactive des points d'intérêt de Bannalec</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    
+    <!-- Font Awesome pour les icônes de filtrage -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <!-- Leaflet Fullscreen plugin -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/2.4.0/Control.FullScreen.min.css" />
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        
+        #map {
+            height: 100vh;
+            width: 100%;
+        }
+        
+        .legend {
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            line-height: 25px;
+        }
+        
+        .legend i {
+            width: 18px;
+            height: 18px;
+            float: left;
+            margin-right: 8px;
+            opacity: 0.7;
+        }
+        
+        .legend img {
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+        
+        .filter-control {
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .filter-option {
+            margin-bottom: 5px;
+        }
+        
+        .filter-option input {
+            margin-right: 5px;
+        }
+        
+        .custom-popup .leaflet-popup-content-wrapper {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 5px;
+            max-width: 300px;
+        }
+        
+        .custom-popup .leaflet-popup-content {
+            margin: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .popup-image {
+            width: 100%;
+            height: auto;
+            margin-bottom: 10px;
+            border-radius: 3px;
+        }
+        
+        .popup-title {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 5px;
+            color: #3c5a99;
+        }
+        
+        .popup-description {
+            font-size: 14px;
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+        
+        .popup-link {
+            display: inline-block;
+            background-color: #3c5a99;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 3px;
+            text-decoration: none;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        .header {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            max-width: 80%;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 20px;
+            color: #3c5a99;
+        }
+        
+        .header p {
+            margin: 5px 0 0;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 16px;
+            }
+            
+            .header p {
+                font-size: 12px;
+            }
+            
+            .filter-control {
+                max-height: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Carte interactive des points d'intérêt de Bannalec</h1>
+        <p>Découvrez le patrimoine historique et culturel de Bannalec</p>
+    </div>
+    
+    <div id="map"></div>
+    
+    <!-- Leaflet JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    
+    <!-- Leaflet Fullscreen plugin -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/2.4.0/Control.FullScreen.min.js"></script>
+    
+    <script>
+        // Initialisation de la carte centrée sur Bannalec
+        const map = L.map('map', {
+            center: [47.9331, -3.7000], // Coordonnées de Bannalec
+            zoom: 13,
+            fullscreenControl: true,
+            fullscreenControlOptions: {
+                position: 'topleft',
+                title: 'Plein écran',
+                titleCancel: 'Quitter le plein écran'
+            }
+        });
+        
+        // Ajouter la couche de base OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        
+        // Définition des icônes personnalisées pour chaque type de point d'intérêt
+        const icons = {
+            eglise: L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            }),
+            menhir: L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            }),
+            megalith: L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            }),
+            moulin: L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            }),
+            four: L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-yellow.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            }),
+            autre: L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            })
+        };
+        
+        // Groupes de calques pour les différents types de points d'intérêt
+        const layers = {
+            eglise: L.layerGroup().addTo(map),
+            menhir: L.layerGroup().addTo(map),
+            megalith: L.layerGroup().addTo(map),
+            moulin: L.layerGroup().addTo(map),
+            four: L.layerGroup().addTo(map),
+            autre: L.layerGroup().addTo(map)
+        };
+        
+        // Données GeoJSON des points d'intérêt (à remplacer par votre propre fichier GeoJSON)
+        const pointsData = {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "name": "Église Saint-Cado",
+                        "type": "eglise",
+                        "description": "Église du XVIe siècle située au centre-bourg de Bannalec. Elle est dédiée à Saint Cado, moine gallois du VIe siècle.",
+                        "image": "https://via.placeholder.com/300x200?text=Eglise+Saint-Cado",
+                        "link": "https://fr.wikipedia.org/wiki/Bannalec"
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [-3.7000, 47.9331]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "name": "Menhir de Kerscao",
+                        "type": "menhir",
+                        "description": "Menhir préhistorique d'environ 4 mètres de hauteur, situé au sud de Bannalec.",
+                        "image": "https://via.placeholder.com/300x200?text=Menhir+de+Kerscao",
+                        "link": ""
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [-3.7150, 47.9250]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "name": "Dolmen de Kermeur",
+                        "type": "megalith",
+                        "description": "Sépulture mégalithique datant du néolithique.",
+                        "image": "https://via.placeholder.com/300x200?text=Dolmen+de+Kermeur",
+                        "link": ""
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [-3.6900, 47.9400]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "name": "Moulin de Kerchuz",
+                        "type": "moulin",
+                        "description": "Ancien moulin à eau du XVIIIe siècle, situé sur la rivière Isole.",
+                        "image": "https://via.placeholder.com/300x200?text=Moulin+de+Kerchuz",
+                        "link": ""
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [-3.7200, 47.9350]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "name": "Four à pain de Kerleven",
+                        "type": "four",
+                        "description": "Four à pain communal traditionnel, restauré en 2010.",
+                        "image": "https://via.placeholder.com/300x200?text=Four+a+pain+de+Kerleven",
+                        "link": ""
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [-3.6950, 47.9300]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "name": "Chapelle de la Véronique",
+                        "type": "eglise",
+                        "description": "Chapelle du XVIIe siècle dédiée à Sainte Véronique.",
+                        "image": "https://via.placeholder.com/300x200?text=Chapelle+de+la+Veronique",
+                        "link": ""
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [-3.7100, 47.9400]
+                    }
+                }
+            ]
+        };
+        
+        // Fonction pour créer le contenu d'une popup
+        function createPopupContent(feature) {
+            const props = feature.properties;
+            let content = `<div class="popup-title">${props.name}</div>`;
+            
+            if (props.image) {
+                content += `<img src="${props.image}" alt="${props.name}" class="popup-image">`;
+            }
+            
+            content += `<div class="popup-description">${props.description}</div>`;
+            
+            if (props.link) {
+                content += `<a href="${props.link}" target="_blank" class="popup-link">En savoir plus</a>`;
+            }
+            
+            return content;
+        }
+        
+        // Fonction pour ajouter un point d'intérêt à la carte
+        function addPointToMap(feature) {
+            const type = feature.properties.type || 'autre';
+            const marker = L.marker(
+                [feature.geometry.coordinates[1], feature.geometry.coordinates[0]], 
+                { icon: icons[type] }
+            );
+            
+            marker.bindPopup(createPopupContent(feature), {
+                className: 'custom-popup',
+                maxWidth: 300
+            });
+            
+            marker.addTo(layers[type]);
+            return marker;
+        }
+        
+        // Ajouter les points d'intérêt à la carte
+        pointsData.features.forEach(addPointToMap);
+        
+        // Créer la légende
+        const legend = L.control({ position: 'bottomright' });
+        
+        legend.onAdd = function(map) {
+            const div = L.DomUtil.create('div', 'legend');
+            
+            const types = {
+                eglise: 'Églises et chapelles',
+                menhir: 'Menhirs',
+                megalith: 'Mégalithes',
+                moulin: 'Moulins à eau',
+                four: 'Fours à pain',
+                autre: 'Autres points d'intérêt'
+            };
+            
+            const iconUrls = {
+                eglise: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+                menhir: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+                megalith: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                moulin: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png',
+                four: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-yellow.png',
+                autre: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png'
+            };
+            
+            div.innerHTML = '<strong>Types de points d\'intérêt</strong><br>';
+            
+            for (const type in types) {
+                div.innerHTML += `
+                    <div>
+                        <img src="${iconUrls[type]}" width="12" height="20">
+                        ${types[type]}
+                    </div>`;
+            }
+            
+            return div;
+        };
+        
+        legend.addTo(map);
+        
+        // Créer le contrôle de filtrage
+        const filterControl = L.control({ position: 'topright' });
+        
+        filterControl.onAdd = function(map) {
+            const div = L.DomUtil.create('div', 'filter-control');
+            
+            const types = {
+                eglise: 'Églises et chapelles',
+                menhir: 'Menhirs',
+                megalith: 'Mégalithes',
+                moulin: 'Moulins à eau',
+                four: 'Fours à pain',
+                autre: 'Autres points d\'intérêt'
+            };
+            
+            div.innerHTML = '<strong>Filtrer par type</strong><br>';
+            
+            for (const type in types) {
+                div.innerHTML += `
+                    <div class="filter-option">
+                        <input type="checkbox" id="filter-${type}" checked>
+                        <label for="filter-${type}">${types[type]}</label>
+                    </div>`;
+            }
+            
+            return div;
+        };
+        
+        filterControl.addTo(map);
+        
+        // Ajouter les événements de filtrage
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                for (const type in layers) {
+                    const checkbox = document.getElementById(`filter-${type}`);
+                    
+                    if (checkbox) {
+                        checkbox.addEventListener('change', function() {
+                            if (this.checked) {
+                                map.addLayer(layers[type]);
+                            } else {
+                                map.removeLayer(layers[type]);
+                            }
+                        });
+                    }
+                }
+                
+                // Empêcher la propagation des événements de la souris sur le contrôle de filtrage
+                const filterControl = document.querySelector('.filter-control');
+                
+                if (filterControl) {
+                    L.DomEvent.disableClickPropagation(filterControl);
+                    L.DomEvent.disableScrollPropagation(filterControl);
+                }
+            }, 500);
+        });
+        
+        // Fonction pour charger un fichier GeoJSON externe
+        function loadGeoJSON(url) {
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    // Supprimer les points existants
+                    for (const type in layers) {
+                        layers[type].clearLayers();
+                    }
+                    
+                    // Ajouter les nouveaux points
+                    data.features.forEach(addPointToMap);
+                })
+                .catch(error => console.error('Erreur lors du chargement du GeoJSON:', error));
+        }
+        
+        // Exemple d'utilisation pour charger un fichier GeoJSON externe
+        // loadGeoJSON('path/to/your/points.geojson');
+    </script>
+</body>
+</html>
