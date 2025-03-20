@@ -1,0 +1,62 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [47.9333, -3.7001]
+      },
+      "properties": {
+        "name": "Église Saint-Cado",
+        "type": "eglise",
+        "description": "Église paroissiale datant du 16ème siècle avec un clocher remarquable.",
+        "period": "16ème siècle",
+        "image": "data/images/saint-cado.jpg",
+        "link": "https://www.tourismebretagne.com/offres/eglise-saint-cado-bannalec-fr-2604608/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-3.6958, 47.9387]
+      },
+      "properties": {
+        "name": "Menhir de Kerlouriec",
+        "type": "menhir",
+        "description": "Menhir datant du Néolithique, d'une hauteur de 3,5 mètres.",
+        "period": "Néolithique",
+        "image": "data/images/menhir-kerlouriec.jpg"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-3.7124, 47.9255]
+      },
+      "properties": {
+        "name": "Moulin de Kerbellec",
+        "type": "moulin",
+        "description": "Ancien moulin à eau du 18ème siècle, situé sur la rivière Isole.",
+        "period": "18ème siècle",
+        "image": "data/images/moulin-kerbellec.jpg"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-3.7042, 47.9362]
+      },
+      "properties": {
+        "name": "Four à pain de Kerlagadic",
+        "type": "four",
+        "description": "Four à pain communal restauré, témoin de la vie rurale bretonne.",
+        "period": "19ème siècle",
+        "image": "data/images/four-kerlagadic.jpg"
+      }
+    }
+  ]
+}
